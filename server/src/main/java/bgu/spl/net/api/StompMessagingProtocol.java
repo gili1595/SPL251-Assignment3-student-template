@@ -1,17 +1,15 @@
 package bgu.spl.net.api;
 
-import bgu.spl.net.srv.Connections;
+public interface StompMessagingProtocol<T> extends MessagingProtocol<T> {
+    //this was the implemtnt:
+    // void start(int connectionId, Connections<T> connections);
+    // void process(T message);
+    // boolean shouldTerminate();
 
-public interface StompMessagingProtocol<T>  {
-	/**
-	 * Used to initiate the current client protocol with it's personal connection ID and the connections implementation
-	**/
-    void start(int connectionId, Connections<T> connections);
-    
-    void process(T message);
-	
-	/**
-     * @return true if the connection should be terminated
-     */
-    boolean shouldTerminate();
+    //each frame is its own frame
+    void sendError(int connectionId, String massage, String receiptId, String body);
+    void sendConnect(int connectionId);
+    void sendMessage(int connectionId, String destination, String body);
+    void sendReceipt(int connectionId, String receiptId);
+    void terminate();
 }
