@@ -7,11 +7,47 @@
 #include <vector>
 #include <sstream>
 #include <cstring>
+#include <iomanip>
+#include <sstream>
+#include <ctime>
 
-#include "../include/keyboardInput.h"
+// #include "../include/keyboardInput.h"
 
 using namespace std;
 using json = nlohmann::json;
+
+//added this method so we can remove keyboardInput.h
+void split_str(const std::string& str, char delimiter, std::vector<std::string>& args) {
+    size_t start = 0;
+    size_t end = str.find(delimiter);
+    while (end != std::string::npos) {
+        std::string token = str.substr(start, end - start);
+        while (!token.empty() && std::isspace(token[0])) {
+            token = token.substr(1);
+        }
+        while (!token.empty() && std::isspace(token[token.length()-1])) {
+            token = token.substr(0, token.length()-1);
+        }
+        if (!token.empty()) {
+            args.push_back(token);
+        }
+        start = end + 1;
+        end = str.find(delimiter, start);
+    }
+    if (start < str.length()) {
+        std::string token = str.substr(start);
+        while (!token.empty() && std::isspace(token[0])) {
+            token = token.substr(1);
+        }
+        while (!token.empty() && std::isspace(token[token.length()-1])) {
+            token = token.substr(0, token.length()-1);
+        }
+        if (!token.empty()) {
+            args.push_back(token);
+        }
+    }
+}
+
 
 Event::Event(std::string channel_name, std::string city, std::string name, int date_time,
              std::string description, std::map<std::string, std::string> general_information)
@@ -62,6 +98,13 @@ const std::string &Event::get_description() const
     return this->description;
 }
 
+int convertDateTimeToSeconds(const std::string& dateStr) {
+    struct tm tm = {};
+    std::istringstream ss(dateStr);
+    ss >> std::get_time(&tm, "%d/%m/%y %H:%M");
+    return mktime(&tm);
+}
+
 Event::Event(const std::string &frame_body): channel_name(""), city(""), 
                                              name(""), date_time(0), description(""), general_information(),
                                              eventOwnerUser("")
@@ -93,7 +136,7 @@ Event::Event(const std::string &frame_body): channel_name(""), city(""),
                 name = val;
             }
             else if(key == "date time") {
-                date_time = std::stoi(val);
+                date_time = convertDateTimeToSeconds(val);
             }
             else if(key == "general information") {
                 inGeneralInformation = true;
@@ -114,21 +157,40 @@ Event::Event(const std::string &frame_body): channel_name(""), city(""),
     general_information = general_information_from_string;
 }
 
-names_and_events parseEventsFile(std::string json_path)
-{
+
+names_and_events parseEventsFile(std::string json_path){
+
+    cout<<"i am parsing now" <<endl;                // dbg
+    cout<<"the file path is:" + json_path << endl;  // dbg
+    
     std::ifstream f(json_path);
     json data = json::parse(f);
+    
+    if(!data.is_null()){cout<<"report file isnt null"<<endl;} //dbg
 
     std::string channel_name = data["channel_name"];
+    
+    cout<<channel_name<<endl; //dbg
 
     // run over all the events and convert them to Event objects
     std::vector<Event> events;
-    for (auto &event : data["events"])
-    {
+    for (auto &event : data["events"]){
         std::string name = event["event_name"];
+
+        cout<<name<<endl; //dbg
+
         std::string city = event["city"];
+
+        cout<<city<<endl; //dbg
+
         int date_time = event["date_time"];
+
+        cout<< date_time <<endl; //dbg
+
         std::string description = event["description"];
+
+        cout<<description<<endl; //dbg
+
         std::map<std::string, std::string> general_information;
         for (auto &update : event["general_information"].items())
         {
@@ -139,6 +201,7 @@ names_and_events parseEventsFile(std::string json_path)
         }
 
         events.push_back(Event(channel_name, city, name, date_time, description, general_information));
+        cout<<"successfully parsed event" + city + name <<endl;
     }
     names_and_events events_and_names{channel_name, events};
 

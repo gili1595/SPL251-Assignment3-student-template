@@ -4,6 +4,7 @@
 #include <iostream>
 #include <map>
 #include <vector>
+int convertDateTimeToSeconds(const std::string& dateStr);
 
 class Event
 {
