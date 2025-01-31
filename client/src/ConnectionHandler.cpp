@@ -58,7 +58,7 @@ bool ConnectionHandler::sendBytes(const char bytes[], int bytesToWrite) {
 		if (error)
 			throw boost::system::system_error(error);
 	} catch (std::exception &e) {
-		std::cerr << "recv failed (Error: " << e.what() << ')' << std::endl;
+		std::cerr << "send failed (Error: " << e.what() << ')' << std::endl;
 		return false;
 	}
 	return true;
