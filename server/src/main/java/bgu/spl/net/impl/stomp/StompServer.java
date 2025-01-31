@@ -1,8 +1,35 @@
 package bgu.spl.net.impl.stomp;
 
+import bgu.spl.net.srv.Server;
+
 public class StompServer {
 
     public static void main(String[] args) {
-        // TODO: implement this
+        int port;
+        try { 
+            port = Integer.parseInt(args[0]); 
+        } catch (NumberFormatException e) { 
+            System.out.println("Illegal Arguments");
+            return;
+        }
+        if (args[1].equals("tpc")) {
+            Server.threadPerClient(
+                port, //port
+                () -> new StompMessagingProtocolImp(), //protocol factory of stomp
+                StompEncoderDecoder::new //message encoder decoder factory of stomp
+            ).serve();
+        }
+        else if (args[1].equals("reactor")) {
+            Server.reactor(
+                Runtime.getRuntime().availableProcessors(),
+                port, //port
+                () -> new StompMessagingProtocolImp(), //protocol factory of stomp
+                StompEncoderDecoder::new //message encoder decoder factory of stomp
+            ).serve();
+        }
+        else {
+            System.out.println("Illegal Arguments");
+            return;
+        }
     }
 }
