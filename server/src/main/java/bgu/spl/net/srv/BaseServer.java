@@ -2,6 +2,7 @@ package bgu.spl.net.srv;
 
 import bgu.spl.net.api.MessageEncoderDecoder;
 import bgu.spl.net.api.MessagingProtocol;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -14,6 +15,9 @@ public abstract class BaseServer<T> implements Server<T> {
     private final Supplier<MessageEncoderDecoder<T>> encdecFactory;
     private ServerSocket sock;
 
+    private int nextId;
+    private Connections<T> connections;
+
     public BaseServer(
             int port,
             Supplier<MessagingProtocol<T>> protocolFactory,
@@ -23,6 +27,9 @@ public abstract class BaseServer<T> implements Server<T> {
         this.protocolFactory = protocolFactory;
         this.encdecFactory = encdecFactory;
 		this.sock = null;
+        
+        this.nextId = 0;
+        this.connections = new ConnectionsImpl<>();
     }
 
     @Override
@@ -42,12 +49,15 @@ public abstract class BaseServer<T> implements Server<T> {
                         encdecFactory.get(),
                         protocolFactory.get());
 
+                connections.connect(handler, nextId);
+                nextId++;
+                
                 execute(handler);
             }
         } catch (IOException ex) {
         }
 
-        System.out.println("server closed!!!");
+        System.out.println("server closed");
     }
 
     @Override

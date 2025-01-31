@@ -23,6 +23,10 @@ public class Reactor<T> implements Server<T> {
     private Thread selectorThread;
     private final ConcurrentLinkedQueue<Runnable> selectorTasks = new ConcurrentLinkedQueue<>();
 
+    private int nextId;
+    private Connections<T> connections;
+
+
     public Reactor(
             int numThreads,
             int port,
@@ -33,6 +37,9 @@ public class Reactor<T> implements Server<T> {
         this.port = port;
         this.protocolFactory = protocolFactory;
         this.readerFactory = readerFactory;
+
+        this.nextId = 0;
+        this.connections = new ConnectionsImpl<>();
     }
 
     @Override
@@ -101,6 +108,11 @@ public class Reactor<T> implements Server<T> {
                 clientChan,
                 this);
         clientChan.register(selector, SelectionKey.OP_READ, handler);
+
+        // initiate connection
+        pool.submit(handler, () -> {connections.connect(handler, nextId);} );
+        nextId++;
+
     }
 
     private void handleReadWrite(SelectionKey key) {
